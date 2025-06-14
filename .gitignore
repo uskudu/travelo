@@ -1,0 +1,14 @@
+/venv
+.idea/
+.env
+*.pem
+
+__pycache__/
+*.py[cod]
+.log
+
+.env.docker
+volumes/
+tmp/
+
+*.db
