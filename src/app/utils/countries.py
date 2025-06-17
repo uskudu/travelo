@@ -10,7 +10,7 @@ def iso2_to_emoji_flag(iso2: str) -> str:
     return first_char + second_char
 
 
-def fetch_countries_with_flags():
+def fetch_countries():
     url = "https://countriesnow.space/api/v0.1/countries/iso"
     response = requests.get(url)
 
@@ -27,4 +27,4 @@ def fetch_countries_with_flags():
     return result
 
 
-countries = fetch_countries_with_flags()
+countries = fetch_countries()

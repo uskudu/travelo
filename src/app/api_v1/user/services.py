@@ -5,12 +5,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
-from app.database.models import User
+from app.database.models import User, Country
 from app.schemas.jwt import TokenSchema
 from app.schemas.user import (
     UserSignUpSchema,
     UserSignUpResponseSchema,
     UserFullSchema,
+    CountrySchema,
+    CountryAddResponseSchema,
+    CountryCreateSchema,
 )
 from app.utils.jwt import create_access_token, verify_password, get_password_hash
 from app.utils.user import get_user_by_id_or_name
@@ -61,8 +64,8 @@ async def token(
 
 
 async def get_me(
-    current_user: User,
     session: AsyncSession,
+    current_user: User,
 ) -> UserFullSchema:
     uid = current_user.user_id
     stmt = await session.execute(
@@ -79,3 +82,25 @@ async def get_me(
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return UserFullSchema.model_validate(user)
+
+
+async def add_countries(
+    session: AsyncSession,
+    current_user: User,
+    cnts: list[CountryCreateSchema],
+) -> CountryAddResponseSchema:
+    cnts = [Country(**cnt.model_dump()) for cnt in cnts]
+    session.add_all(cnts)
+    await session.commit()
+    return CountryAddResponseSchema(msg="countries successfully added")
+
+
+async def add_countries_all(
+    session: AsyncSession,
+    current_user: User,
+    countries: list,
+) -> CountryAddResponseSchema:
+    cnts = [Country(**cnt) for cnt in countries]
+    session.add_all(cnts)
+    await session.commit()
+    return CountryAddResponseSchema(msg="countries successfully added")

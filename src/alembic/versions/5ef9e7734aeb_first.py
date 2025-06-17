@@ -1,8 +1,8 @@
 """first
 
-Revision ID: c1cdfabb8c3f
+Revision ID: 5ef9e7734aeb
 Revises: 
-Create Date: 2025-06-12 20:23:54.063489
+Create Date: 2025-06-17 08:52:20.151002
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'c1cdfabb8c3f'
+revision = '5ef9e7734aeb'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -23,13 +23,18 @@ def upgrade():
     sa.Column('iso2', sa.String(), nullable=False),
     sa.Column('title', sa.String(), nullable=False),
     sa.Column('flag', sa.String(), nullable=False),
-    sa.PrimaryKeyConstraint('country_id')
+    sa.PrimaryKeyConstraint('country_id'),
+    sa.UniqueConstraint('flag'),
+    sa.UniqueConstraint('iso2'),
+    sa.UniqueConstraint('title')
     )
     op.create_table('users',
     sa.Column('user_id', sa.String(), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('username', sa.String(), nullable=False),
-    sa.PrimaryKeyConstraint('user_id')
+    sa.Column('password', sa.String(), nullable=False),
+    sa.Column('role', sa.String(), nullable=False),
+    sa.PrimaryKeyConstraint('user_id'),
+    sa.UniqueConstraint('username')
     )
     op.create_table('favourite',
     sa.Column('favourite_id', sa.Integer(), nullable=False),

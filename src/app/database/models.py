@@ -12,9 +12,15 @@ class Base(DeclarativeBase):
 class Country(Base):
     __tablename__ = "countries"
     country_id: Mapped[int] = mapped_column(primary_key=True)
-    iso2: Mapped[str]
-    title: Mapped[str]
-    flag: Mapped[str]
+    iso2: Mapped[str] = mapped_column(unique=True)
+    title: Mapped[str] = mapped_column(unique=True)
+    flag: Mapped[str] = mapped_column(unique=True)
+
+    def to_dict(self):
+        country_id = self.country_id
+        iso2 = self.iso2
+        title = self.title
+        flag = self.flag
 
 
 class User(Base):
@@ -32,6 +38,7 @@ class User(Base):
     wishlist: Mapped[list["Wishlist"]] = relationship(back_populates="user")
 
     def to_dict(self):
+        user_id = self.user_id
         username = self.username
         role = self.role
         reviews = self.reviews

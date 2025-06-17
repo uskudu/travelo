@@ -74,3 +74,17 @@ class UserSignInResponseSchema(BaseModel):
     token: TokenSchema
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class CountrySchema(BaseModel):
+    iso2: str
+    title: str
+    flag: str
+
+
+class CountryCreateSchema(CountrySchema):
+    pass
+
+
+class CountryAddResponseSchema(BaseModel):
+    msg: str
