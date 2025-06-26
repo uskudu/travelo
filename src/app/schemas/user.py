@@ -11,12 +11,16 @@ class ReviewsSchema(BaseModel):
     likes: int = 0
     dislikes: int = 0
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class VisitedSchema(BaseModel):
     visited_id: int
     user_id: str
     country_id: int
-    review_id: int = ""
+    review_id: int | None = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FavouriteSchema(BaseModel):
@@ -24,11 +28,15 @@ class FavouriteSchema(BaseModel):
     user_id: str
     country_id: int
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class WishlistSchema(BaseModel):
     wishlist_id: int
     user_id: str
     country_id: int
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserFullSchema(BaseModel):
@@ -81,6 +89,8 @@ class CountrySchema(BaseModel):
     title: str
     flag: str
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class CountryCreateSchema(CountrySchema):
     pass
@@ -88,3 +98,47 @@ class CountryCreateSchema(CountrySchema):
 
 class CountryAddResponseSchema(BaseModel):
     msg: str
+
+
+class VisitedResponseSchema(VisitedSchema):
+    pass
+
+
+class FavouriteResponseSchema(FavouriteSchema):
+    pass
+
+
+class WishlistResponseSchema(WishlistSchema):
+    pass
+
+
+class VisitedGetSchema(BaseModel):
+    id: int
+    country: CountrySchema
+    review: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class FavouriteGetSchema(BaseModel):
+    id: int
+    country: CountrySchema
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class WishlistGetSchema(BaseModel):
+    id: int
+    country: CountrySchema
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserNiceResponseSchema(BaseModel):
+    username: str
+    # reviews: list[ReviewsNiceResponseSchema]
+    visited: list[VisitedGetSchema]
+    favourite: list[FavouriteGetSchema]
+    wishlist: list[WishlistGetSchema]
+
+    model_config = ConfigDict(from_attributes=True)

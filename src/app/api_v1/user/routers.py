@@ -5,19 +5,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api_v1.user import services
 from app.database.db_helper import get_session
-from app.database.models import User, Country
+from app.database.models import User
 from app.schemas.jwt import TokenSchema
 from app.schemas.user import (
     UserSignUpSchema,
     UserSignUpResponseSchema,
     UserFullSchema,
-    CountryAddResponseSchema,
-    CountrySchema,
-    CountryCreateSchema,
+    VisitedResponseSchema,
+    UserNiceResponseSchema,
+    FavouriteResponseSchema,
+    WishlistResponseSchema,
 )
-from app.utils.jwt import get_current_user, require_role
-
-from app.utils.countries import fetch_countries
+from app.utils.jwt import get_current_user
 
 
 router = APIRouter(
@@ -42,7 +41,7 @@ async def login_for_access_token(
     return await services.token(form_data, session)
 
 
-@router.get("/me", response_model=UserFullSchema)
+@router.get("/me")
 async def get_me(
     current_user: Annotated[User, Depends(get_current_user)],
     session: AsyncSession = Depends(get_session),
@@ -50,19 +49,28 @@ async def get_me(
     return await services.get_me(session, current_user)
 
 
-@router.post("/add-countries", response_model=CountryAddResponseSchema)
-async def add_countries(
-    cnts: list[CountryCreateSchema],
+@router.post("/add-to-visited", response_model=VisitedResponseSchema)
+async def add_to_visited(
+    cnt_id: int,
     session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(get_current_user),
 ):
-    return await services.add_countries(session, current_user, cnts)
+    return await services.add_to_visited(cnt_id, session, current_user)
 
 
-@router.post("/add-countries-all", response_model=CountryAddResponseSchema)
-async def add_countries_all(
-    cnts: list[Country] = Depends(fetch_countries),
+@router.post("/add-to-favourite", response_model=FavouriteResponseSchema)
+async def add_to_favourite(
+    cnt_id: int,
     session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(get_current_user),
 ):
-    return await services.add_countries_all(session, current_user, cnts)
+    return await services.add_to_favourite(cnt_id, session, current_user)
+
+
+@router.post("/add-to-wishlist", response_model=WishlistResponseSchema)
+async def add_to_wishlist(
+    cnt_id: int,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    return await services.add_to_wishlist(cnt_id, session, current_user)

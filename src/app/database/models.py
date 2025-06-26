@@ -1,6 +1,6 @@
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, CheckConstraint
+from sqlalchemy import ForeignKey, CheckConstraint, UniqueConstraint
 
 import uuid
 
@@ -17,10 +17,12 @@ class Country(Base):
     flag: Mapped[str] = mapped_column(unique=True)
 
     def to_dict(self):
-        country_id = self.country_id
-        iso2 = self.iso2
-        title = self.title
-        flag = self.flag
+        return {
+            "country_id": self.country_id,
+            "iso2": self.iso2,
+            "title": self.title,
+            "flag": self.flag,
+        }
 
 
 class User(Base):
@@ -38,13 +40,15 @@ class User(Base):
     wishlist: Mapped[list["Wishlist"]] = relationship(back_populates="user")
 
     def to_dict(self):
-        user_id = self.user_id
-        username = self.username
-        role = self.role
-        reviews = self.reviews
-        visited = self.visited
-        favourite = self.favourite
-        wishlist = self.wishlist
+        return {
+            "user_id": self.user_id,
+            "username": self.username,
+            "role": self.role,
+            "reviews": self.reviews,
+            "visited": self.visited,
+            "favourite": self.favourite,
+            "wishlist": self.wishlist,
+        }
 
 
 class Reviews(Base):
@@ -65,6 +69,7 @@ class Reviews(Base):
     __table_args__ = (
         CheckConstraint("likes >= 0"),
         CheckConstraint("dislikes >= 0"),
+        UniqueConstraint("user_id", "country_id", name="unique_user_country"),
     )
 
 
@@ -77,12 +82,20 @@ class Visited(Base):
     country_id: Mapped[int] = mapped_column(
         ForeignKey("countries.country_id", ondelete="CASCADE")
     )
-    review_id: Mapped[str] = mapped_column(
+    review_id: Mapped[int] = mapped_column(
         ForeignKey("reviews.review_id", ondelete="CASCADE"),
         nullable=True,
     )
 
     user: Mapped["User"] = relationship(back_populates="visited")
+
+    def to_dict(self):
+        return {
+            "visited_id": int,
+            "user_id": str,
+            "country_id": int,
+            "review_id": str,
+        }
 
 
 class Favourite(Base):
