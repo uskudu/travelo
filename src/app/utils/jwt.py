@@ -14,7 +14,7 @@ from app.utils.user import get_user_by_id_or_name
 
 SECRET_KEY = settings.jwt_secret_key
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 99999
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

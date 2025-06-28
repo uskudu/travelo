@@ -24,8 +24,8 @@ from app.utils.jwt import create_access_token, verify_password, get_password_has
 from app.utils.user import get_user_by_id_or_name
 
 
-T = TypeVar("T")
-R = TypeVar("R")
+T = TypeVar("T")  # db
+R = TypeVar("R")  # pydantic
 
 
 async def sign_up(
@@ -72,6 +72,31 @@ async def token(
     return TokenSchema(access_token=access_token)
 
 
+async def get_list(
+    session: AsyncSession,
+    user_id: str,
+    model: Type[T],
+    response_schema: Type[R],
+    id_field: str,
+) -> list[R]:
+    stmt = await session.execute(select(model).where(model.user_id == user_id))
+    list_in_db = stmt.scalars().all()
+
+    result_list = []
+    for item in list_in_db:
+        stmt = await session.execute(
+            select(Country).where(Country.country_id == item.country_id)
+        )
+        cntry = stmt.scalar_one_or_none()
+        result_list.append(
+            response_schema(
+                id=getattr(item, id_field),
+                country=CountrySchema.model_validate(cntry),
+            )
+        )
+    return result_list
+
+
 async def get_me(
     session: AsyncSession,
     current_user: User,
@@ -91,60 +116,33 @@ async def get_me(
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # visited
-    vis_stmt = await session.execute(select(Visited).where(Visited.user_id == uid))
-    visited_in_db = vis_stmt.scalars()
-
-    visited_list = []
-    for v in visited_in_db:
-
-        stmt = await session.execute(
-            select(Country).where(Country.country_id == v.country_id)
-        )
-        cntry = stmt.scalar_one_or_none()
-        visited_list.append(
-            VisitedGetSchema(
-                id=v.visited_id, country=CountrySchema.model_validate(cntry)
-            )
-        )
-
-    # favourite
-    fav_stmt = await session.execute(select(Favourite).where(Favourite.user_id == uid))
-    fav_in_db = fav_stmt.scalars()
-
-    fav_list = []
-    for f in fav_in_db:
-        stmt = await session.execute(
-            select(Country).where(Country.country_id == f.country_id)
-        )
-        cntry = stmt.scalar_one_or_none()
-        fav_list.append(
-            FavouriteGetSchema(
-                id=f.favourite_id, country=CountrySchema.model_validate(cntry)
-            )
-        )
-
-    # wishlist
-    wish_stmt = await session.execute(select(Wishlist).where(Wishlist.user_id == uid))
-    wish_in_db = wish_stmt.scalars()
-
-    wish_list = []
-    for w in wish_in_db:
-        stmt = await session.execute(
-            select(Country).where(Country.country_id == w.country_id)
-        )
-        cntry = stmt.scalar_one_or_none()
-        wish_list.append(
-            WishlistGetSchema(
-                id=w.wishlist_id, country=CountrySchema.model_validate(cntry)
-            )
-        )
+    visited_list = await get_list(
+        session,
+        uid,
+        Visited,
+        VisitedGetSchema,
+        "visited_id",
+    )
+    favourite_list = await get_list(
+        session,
+        uid,
+        Favourite,
+        FavouriteGetSchema,
+        "favourite_id",
+    )
+    wishlist_list = await get_list(
+        session,
+        uid,
+        Wishlist,
+        WishlistGetSchema,
+        "wishlist_id",
+    )
 
     return UserNiceResponseSchema(
         username=current_user.username,
         visited=visited_list,
-        favourite=fav_list,
-        wishlist=wish_list,
+        favourite=favourite_list,
+        wishlist=wishlist_list,
     )
 
 
@@ -156,6 +154,17 @@ async def add_to_list(
     response_schema: Type[R],
     list_name: str,
 ) -> R:
+    """
+    adding to (list) database (visited, favourite, wishlist)
+
+    :param cnt_id: id of country that is to be added to list
+    :param session:
+    :param current_user:
+    :param model: model of database (visited, favourite, wishlist)
+    :param response_schema: pydantic response model
+    :param list_name: name of list (eg: 'visited', 'favourite', 'wishlist')
+    :return: pydantic model
+    """
     # validate country exists
     stmt = await session.execute(select(Country).where(Country.country_id == cnt_id))
     cntry_in_db = stmt.scalar_one_or_none()
